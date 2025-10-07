@@ -236,9 +236,12 @@ int main()
     irq_assign_to_ns(TIMER1_IRQ_3, true);
 
     // Enable NS GPIO access
-    accessctrl_hw->gpio_nsmask[0] = 0xfffffffc;
-    accessctrl_hw->gpio_nsmask[1] = 0xffffffff;
-    accessctrl_hw->pads_bank0 |= 0xacce0000 | ACCESSCTRL_PADS_BANK0_NSP_BITS | ACCESSCTRL_PADS_BANK0_NSU_BITS;
+    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_REG_ON, true);
+    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_DATA_OUT, true);
+    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_DATA_IN, true);
+    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_HOST_WAKE, true);
+    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_CLOCK, true);
+    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_CS, true);
     accessctrl_hw->io_bank[0] |= 0xacce0000 | ACCESSCTRL_PADS_BANK0_NSP_BITS | ACCESSCTRL_PADS_BANK0_NSU_BITS;
 
     // Enable NS GPIO IRQ
