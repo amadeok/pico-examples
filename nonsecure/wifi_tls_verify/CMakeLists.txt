@@ -34,6 +34,9 @@ add_executable(tls_verify_nonsecure nonsecure.c tls_common.c)
 
 pico_set_uf2_family(tls_verify_nonsecure "rp2350-arm-ns")
 
+pico_enable_stdio_uart(tls_verify_nonsecure 0)
+pico_enable_stdio_usb(tls_verify_nonsecure 1)
+
 target_link_libraries(tls_verify_nonsecure
         pico_stdlib
         pico_cyw43_arch_lwip_threadsafe_background
@@ -68,6 +71,7 @@ pico_set_security_defines(tls_verify_secure tls_verify_nonsecure
     ALLOW_NONSECURE_USER_IRQ
     ALLOW_NONSECURE_PIO
     ALLOW_NONSECURE_GPIO
+    ALLOW_NONSECURE_USB
     ASSIGN_NONSECURE_TIMER 1
 )
 

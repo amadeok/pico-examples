@@ -5,6 +5,7 @@
 #include "pico/cyw43_arch.h"
 #include "hardware/dma.h"
 #include "hardware/pio.h"
+#include "pico/stdlib.h"
 
 // Using this url as we know the root cert won't change for a long time
 #define TLS_CLIENT_SERVER "fw-download-alias1.raspberrypi.com"
@@ -87,7 +88,7 @@ int main() {
         goto done;
     }
     // Request user IRQs from secure
-    int num_user_irqs = user_irq_request_unused_from_secure(1);
+    int num_user_irqs = user_irq_request_unused_from_secure(2);
     printf("Got %d user IRQs\n", num_user_irqs);
 
     // Check no PIOs are available
@@ -102,6 +103,9 @@ int main() {
     // Request PIOs from secure
     int got_pio = pio_request_unused_pio_from_secure();
     printf("Got PIO: %d\n", got_pio);
+
+    // Initialise stdio_usb
+    stdio_usb_init();
 
     // Repeating timer
     struct repeating_timer timer;
