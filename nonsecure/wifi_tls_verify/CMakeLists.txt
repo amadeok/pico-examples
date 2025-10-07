@@ -11,6 +11,7 @@ target_link_libraries(tls_verify_secure
         pico_rand
         hardware_exception
         hardware_watchdog
+        pico_secure
 )
 
 # Add the standard include files to the build
@@ -45,8 +46,6 @@ target_include_directories(tls_verify_nonsecure PRIVATE
 )
 
 target_compile_definitions(tls_verify_nonsecure PRIVATE
-    PICO_DEFAULT_TIMER=1
-
     WIFI_SSID=\"${WIFI_SSID}\"
     WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
 
@@ -63,11 +62,13 @@ pico_add_extra_outputs(tls_verify_nonsecure)
 
 
 pico_set_security_defines(tls_verify_secure tls_verify_nonsecure
-    PICO_ALLOW_NONSECURE_STDIO=1
-    PICO_ALLOW_NONSECURE_RAND=1
-    PICO_ALLOW_NONSECURE_DMA=1
-    PICO_ALLOW_NONSECURE_USER_IRQ=1
-    PICO_ALLOW_NONSECURE_PIO=1
+    ALLOW_NONSECURE_STDIO
+    ALLOW_NONSECURE_RAND
+    ALLOW_NONSECURE_DMA
+    ALLOW_NONSECURE_USER_IRQ
+    ALLOW_NONSECURE_PIO
+    ALLOW_NONSECURE_GPIO
+    ASSIGN_NONSECURE_TIMER 1
 )
 
 

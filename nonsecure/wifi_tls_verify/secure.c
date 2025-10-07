@@ -4,59 +4,13 @@
 #include "boot/picobin.h"
 #include "pico/rand.h"
 #include "hardware/watchdog.h"
+#include "pico/secure.h"
 
 #include "hardware/structs/dma.h"
 #include "hardware/structs/sau.h"
 #include "hardware/structs/qmi.h"
 #include "hardware/exception.h"
 #include "hardware/structs/scb.h"
-
-
-int rom_c_callback(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t fn) {
-    // printf("Secure call happened\n");
-    // printf("%08x\n", a);
-    // printf("%08x\n", b);
-    // printf("%08x\n", c);
-    // printf("%08x\n", d);
-    // printf("%08x\n", fn);
-    switch (fn) {
-        case 0: {
-            // printf("Printing string\n");
-            printf("%s", (char*)a);
-            return 0;
-        }
-        case 1: {
-            printf("get_rand_%d(%p)\n", a, b);
-            switch (a) {
-                case 32:
-                    return get_rand_32();
-                case 64:
-                    return get_rand_64();
-                case 128:
-                    get_rand_128((rng_128_t*)b);
-                    return 0;
-                default:
-                    printf("%d is an unknown rand function\n", a);
-                    return BOOTROM_ERROR_NOT_PERMITTED;
-            }
-        }
-        default: {
-            printf("%d is not a supported rom function - sorry\n", fn);
-            return BOOTROM_ERROR_NOT_PERMITTED;
-        }
-
-    }
-}
-
-
-int __attribute__((naked)) rom_callback() {
-    pico_default_asm_volatile(
-            "push {r0, lr}\n"
-            "str r4, [sp]\n"
-            "bl rom_c_callback\n"
-            "pop {r1, pc}\n"
-    );
-}
 
 
 bool repeating_timer_callback(__unused struct repeating_timer *t) {
@@ -226,61 +180,27 @@ int main()
     rc = rom_set_ns_api_permission(BOOTROM_NS_API_get_sys_info, true);
     printf("Enable Sys Info, rc=%d\n", rc);
 
-    // Enable NS timer access
-    accessctrl_hw->timer[1] |= 0xacce0000 | ACCESSCTRL_TIMER1_NSP_BITS | ACCESSCTRL_TIMER1_NSU_BITS;
-
-    // Enable NS timer IRQs
-    irq_assign_to_ns(TIMER1_IRQ_0, true);
-    irq_assign_to_ns(TIMER1_IRQ_1, true);
-    irq_assign_to_ns(TIMER1_IRQ_2, true);
-    irq_assign_to_ns(TIMER1_IRQ_3, true);
-
-    // Enable NS GPIO access
+    // Enable NS GPIO access to CYW43 GPIOs
     gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_REG_ON, true);
     gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_DATA_OUT, true);
     gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_DATA_IN, true);
     gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_HOST_WAKE, true);
     gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_CLOCK, true);
     gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_CS, true);
-    accessctrl_hw->io_bank[0] |= 0xacce0000 | ACCESSCTRL_PADS_BANK0_NSP_BITS | ACCESSCTRL_PADS_BANK0_NSU_BITS;
-
-    // Enable NS GPIO IRQ
-    irq_assign_to_ns(IO_IRQ_BANK0_NS, true);
-
-    // Enable NS DMA access
-    accessctrl_hw->dma |= 0xacce0000 | ACCESSCTRL_DMA_NSP_BITS | ACCESSCTRL_DMA_NSU_BITS;
-
-    // Enable SAU
-    __dmb();
 
     // XIP is NS Code
-    sau_hw->rnr = 0;
-    sau_hw->rbar = (XIP_BASE & M33_SAU_RBAR_BADDR_BITS);
-    sau_hw->rlar = ((XIP_END - 1) & M33_SAU_RLAR_LADDR_BITS) | M33_SAU_RLAR_ENABLE_BITS;
+    secure_sau_configure_region(0, XIP_BASE, XIP_END, true, false);
     printf("RNR 0, RBAR %08x, RLAR %08x\n", sau_hw->rbar, sau_hw->rlar);
 
     // SRAM0-3 (up to 2003000) is NS data
-    sau_hw->rnr = 1;
-    sau_hw->rbar = (SRAM_BASE & M33_SAU_RBAR_BADDR_BITS);
-    sau_hw->rlar = ((0x20030000 - 1) & M33_SAU_RLAR_LADDR_BITS) | M33_SAU_RLAR_ENABLE_BITS;
+    secure_sau_configure_region(1, SRAM_BASE, 0x20030000, true, false);
     printf("RNR 1, RBAR %08x, RLAR %08x\n", sau_hw->rbar, sau_hw->rlar);
 
     // SRAM8-9 is NS scratch
-    sau_hw->rnr = 2;
-    sau_hw->rbar = (SRAM8_BASE & M33_SAU_RBAR_BADDR_BITS);
-    sau_hw->rlar = ((SRAM_END - 1) & M33_SAU_RLAR_LADDR_BITS) | M33_SAU_RLAR_ENABLE_BITS;
+    secure_sau_configure_region(2, SRAM8_BASE, SRAM_END, true, false);
     printf("RNR 2, RBAR %08x, RLAR %08x\n", sau_hw->rbar, sau_hw->rlar);
 
-    // Check bootrom configured region
-    sau_hw->rnr = 7;
-    sau_hw->rbar = 0x46a0;
-    sau_hw->rlar = 0x7fe1;
-    printf("RNR 7, RBAR %08x, RLAR %08x\n", sau_hw->rbar, sau_hw->rlar);
-
-    sau_hw->ctrl = M33_SAU_CTRL_ENABLE_BITS;
-
-    __dsb();
-    __isb();
+    secure_sau_set_enabled(true);
 
     printf("SAU Configured\n");
 
@@ -291,24 +211,7 @@ int main()
     watchdog_enable(2000, true);
     add_repeating_timer_ms(1000, repeating_timer_callback, NULL, &timer);
 
-    scb_ns_hw->vtor = XIP_BASE + 0x200;
-
-    pico_default_asm(
-        "msr msplim, %0\n"
-        "msr msp_ns, %1\n"
-        "msr msplim_ns, %2\n"
-        "movs r1, %3\n"
-        "movs r0, %4\n"
-        // "movs r2, #0\n"
-        // "ldmia r3, {r1-r12}\n"
-        "blxns r1"
-        :
-        :   "r" (SRAM8_BASE - 0x1000),
-            "r" (SRAM_END),
-            "r" (SRAM8_BASE),
-            "r" ((XIP_BASE & ~1) + 4),  // Jump into _enter_vtable_in_r0, not _entry_point
-            "r" (scb_ns_hw->vtor)      // And put vtable in r0
-    );
+    secure_launch_nonsecure_binary(XIP_BASE + 0x200, SRAM8_BASE);
 
     printf("Shouldn't return from jump\n");
 }
