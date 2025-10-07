@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "pico/stdlib.h"
 #include "pico/bootrom.h"
 #include "hardware/clocks.h"
 #include "pico/cyw43_arch.h"
 #include "hardware/dma.h"
+#include "hardware/pio.h"
 
 // Using this url as we know the root cert won't change for a long time
 #define TLS_CLIENT_SERVER "fw-download-alias1.raspberrypi.com"
@@ -89,6 +89,19 @@ int main() {
     // Request user IRQs from secure
     int num_user_irqs = user_irq_request_unused_from_secure(1);
     printf("Got %d user IRQs\n", num_user_irqs);
+
+    // Check no PIOs are available
+    int sm = pio_claim_unused_sm(pio0, false);
+    sm += pio_claim_unused_sm(pio1, false);
+    sm += pio_claim_unused_sm(pio2, false);
+    printf("PIO sum: %d\n", sm);
+    if (sm != -3) {
+        printf("ERROR: PIOs are already available\n");
+        goto done;
+    }
+    // Request PIOs from secure
+    int got_pio = pio_request_unused_pio_from_secure();
+    printf("Got PIO: %d\n", got_pio);
 
     // Repeating timer
     struct repeating_timer timer;

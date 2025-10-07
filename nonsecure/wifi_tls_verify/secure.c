@@ -221,8 +221,6 @@ int main()
 
     int rc;
 
-    rc = rom_set_ns_api_permission(BOOTROM_NS_API_secure_call, true);
-    printf("Enable Secure Call, rc=%d\n", rc);
     rc = rom_set_ns_api_permission(BOOTROM_NS_API_reboot, true);
     printf("Enable Reboot, rc=%d\n", rc);
     rc = rom_set_ns_api_permission(BOOTROM_NS_API_get_sys_info, true);
@@ -246,34 +244,8 @@ int main()
     // Enable NS GPIO IRQ
     irq_assign_to_ns(IO_IRQ_BANK0_NS, true);
 
-    // Enable NS PIO access
-    accessctrl_hw->pio[0] |= 0xacce0000 | ACCESSCTRL_PIO0_NSP_BITS | ACCESSCTRL_PIO0_NSU_BITS;
-    accessctrl_hw->pio[1] |= 0xacce0000 | ACCESSCTRL_PIO0_NSP_BITS | ACCESSCTRL_PIO0_NSU_BITS;
-    accessctrl_hw->pio[2] |= 0xacce0000 | ACCESSCTRL_PIO0_NSP_BITS | ACCESSCTRL_PIO0_NSU_BITS;
-
-    // Enable NS PIO IRQs
-    irq_assign_to_ns(PIO0_IRQ_0, true);
-    irq_assign_to_ns(PIO0_IRQ_1, true);
-    irq_assign_to_ns(PIO1_IRQ_0, true);
-    irq_assign_to_ns(PIO1_IRQ_1, true);
-    irq_assign_to_ns(PIO2_IRQ_0, true);
-    irq_assign_to_ns(PIO2_IRQ_1, true);
-
     // Enable NS DMA access
     accessctrl_hw->dma |= 0xacce0000 | ACCESSCTRL_DMA_NSP_BITS | ACCESSCTRL_DMA_NSU_BITS;
-
-    // Enable NS coprocessor access to anything secure has enabled
-    uint32_t cpacr = scb_hw->cpacr;
-    uint32_t nsacr = 0;
-    for (int i = 0; i < 16; i++) {
-        if (cpacr & (0x3 << (i * 2))) {
-            printf("Enabling CP%d\n", i);
-            nsacr |= (0x1 << i);
-        }
-    }
-    printf("NSACR was: %08x\n", scb_hw->nsacr);
-    scb_hw->nsacr |= nsacr;
-    printf("NSACR now: %08x\n", scb_hw->nsacr);
 
     // Enable SAU
     __dmb();

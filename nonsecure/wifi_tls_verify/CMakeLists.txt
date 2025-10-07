@@ -47,11 +47,6 @@ target_include_directories(tls_verify_nonsecure PRIVATE
 target_compile_definitions(tls_verify_nonsecure PRIVATE
     PICO_DEFAULT_TIMER=1
 
-    ENABLE_SPI_DUMPING=1
-
-    # RP2350 Arm NS Exe
-    PICO_CRT0_IMAGE_TYPE_ITEM_VALUE=0x1011
-
     WIFI_SSID=\"${WIFI_SSID}\"
     WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
 
@@ -72,6 +67,7 @@ pico_set_security_defines(tls_verify_secure tls_verify_nonsecure
     PICO_ALLOW_NONSECURE_RAND=1
     PICO_ALLOW_NONSECURE_DMA=1
     PICO_ALLOW_NONSECURE_USER_IRQ=1
+    PICO_ALLOW_NONSECURE_PIO=1
 )
 
 
