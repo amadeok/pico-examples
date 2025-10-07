@@ -2,14 +2,11 @@
 #include "pico/stdlib.h"
 #include "pico/bootrom.h"
 #include "boot/picobin.h"
-#include "pico/rand.h"
 #include "hardware/watchdog.h"
 #include "pico/secure.h"
 
-#include "hardware/structs/dma.h"
 #include "hardware/structs/sau.h"
 #include "hardware/structs/qmi.h"
-#include "hardware/exception.h"
 #include "hardware/structs/scb.h"
 
 
@@ -17,68 +14,11 @@ bool repeating_timer_callback(__unused struct repeating_timer *t) {
     printf("Repeat at %lld\n", time_us_64());
     watchdog_update();
 
-#if 0
-    uint32_t sp;
-    pico_default_asm_volatile(
-        "mrs %0, msp_ns"
-        : "=r" (sp)
-    );
-
-    printf("sp %08x\n", sp);
-    printf("r0 %08x\n", *((uint32_t*)sp + 0));
-    printf("r1 %08x\n", *((uint32_t*)sp + 1));
-    printf("r2 %08x\n", *((uint32_t*)sp + 2));
-    printf("r3 %08x\n", *((uint32_t*)sp + 3));
-    printf("r12 %08x\n", *((uint32_t*)sp + 4));
-    printf("lr %08x\n", *((uint32_t*)sp + 5));
-    printf("pc %08x\n", *((uint32_t*)sp + 6));
-    printf("xPSR %08x\n", *((uint32_t*)sp + 7));
-#endif
-
     return true;
 }
 
 
-void hard_fault_handler(void) {
-    printf("Hard fault occurred at %lld, resetting\n", time_us_64());
-
-    // # First eight values on stack will always be:
-    // # r0, r1, r2, r3, r12, LR, pc, xPSR
-    // (gdb) p/a *(uint32_t[8] *)$psp
-
-    uint32_t sp;
-    pico_default_asm_volatile(
-        "mrs %0, msp_ns"
-        : "=r" (sp)
-    );
-
-    printf("sp %08x\n", sp);
-    printf("r0 %08x\n", *((uint32_t*)sp + 0));
-    printf("r1 %08x\n", *((uint32_t*)sp + 1));
-    printf("r2 %08x\n", *((uint32_t*)sp + 2));
-    printf("r3 %08x\n", *((uint32_t*)sp + 3));
-    printf("r12 %08x\n", *((uint32_t*)sp + 4));
-    printf("lr %08x\n", *((uint32_t*)sp + 5));
-    printf("pc %08x\n", *((uint32_t*)sp + 6));
-    printf("xPSR %08x\n", *((uint32_t*)sp + 7));
-
-    printf("HFSR %08x\n", scb_hw->hfsr);
-    if (scb_hw->hfsr & M33_HFSR_DEBUGEVT_BITS) printf("HardFault Debug Event\n");
-    if (scb_hw->hfsr & M33_HFSR_FORCED_BITS) printf("HardFault Forced\n");
-
-    printf("SFSR %08x\n", m33_hw->sfsr);
-    if (m33_hw->sfsr & M33_SFSR_AUVIOL_BITS) printf("SecureFault Non-secure accessed Secure\n");
-    if (m33_hw->sfsr & M33_SFSR_INVEP_BITS) printf("SecureFault Non-secure branched Secure\n");
-    if (m33_hw->sfsr & M33_SFSR_SFARVALID_BITS) printf("SFAR %08x\n", m33_hw->sfar);
-
-    printf("CFSR %08x\n", scb_hw->cfsr);
-    if (scb_hw->cfsr & M33_CFSR_UFSR_NOCP_BITS) printf("UsageFault No Coprocessor\n");
-    if (scb_hw->cfsr & (M33_CFSR_BFSR_IMPRECISERR_BITS | M33_CFSR_BFSR_PRECISERR_BITS)) printf("BusFault Data Error\n");
-    printf("MMFAR %08x\n", scb_hw->mmfar);
-    if (m33_hw->cfsr & M33_CFSR_BFSR_BFARVALID_BITS) printf("BFAR %08x\n", scb_hw->bfar);
-
-    printf("DHCSR %08x\n", m33_hw->dhcsr);
-
+void hardfault_callback(void) {
     if (m33_hw->dhcsr & M33_DHCSR_C_DEBUGEN_BITS) {
         __breakpoint();
     } else {
@@ -190,22 +130,17 @@ int main()
 
     // XIP is NS Code
     secure_sau_configure_region(0, XIP_BASE, XIP_END, true, false);
-    printf("RNR 0, RBAR %08x, RLAR %08x\n", sau_hw->rbar, sau_hw->rlar);
 
     // SRAM0-3 (up to 2003000) is NS data
     secure_sau_configure_region(1, SRAM_BASE, 0x20030000, true, false);
-    printf("RNR 1, RBAR %08x, RLAR %08x\n", sau_hw->rbar, sau_hw->rlar);
 
     // SRAM8-9 is NS scratch
     secure_sau_configure_region(2, SRAM8_BASE, SRAM_END, true, false);
-    printf("RNR 2, RBAR %08x, RLAR %08x\n", sau_hw->rbar, sau_hw->rlar);
 
     secure_sau_set_enabled(true);
+    printf("SAU Configured & Enabled\n");
 
-    printf("SAU Configured\n");
-
-    exception_handler_t old_handler = exception_set_exclusive_handler(HARDFAULT_EXCEPTION, hard_fault_handler);
-    printf("HardFault Handler set to %08x from %p\n", hard_fault_handler, old_handler);
+    secure_install_default_hardfault_handler(hardfault_callback);
 
     struct repeating_timer timer;
     watchdog_enable(2000, true);
