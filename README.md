@@ -403,7 +403,7 @@ These examples all demonstrate using Arm TrustZone features, where separate code
 App|Description
 ---|---
 [hello_trustzone](trustzone/hello_trustzone) | Demonstrate launching a non-secure binary, with the NonSecure binary using stdio_usb.
-[wifi_tls_verify](trustzone/wifi_tls_verify) | Similar to picow_tls_verify, but running all the networking code on the NonSecure side, using Secure stdio.
+[tls_verify_trustzone](trustzone/wifi_tls_verify) | Similar to picow_tls_verify, but running all the networking code on the NonSecure side, using Secure stdio.
 
 ### UART
 
