@@ -5,7 +5,6 @@
 #include "pico/cyw43_arch.h"
 #include "hardware/dma.h"
 #include "hardware/pio.h"
-#include "pico/stdlib.h"
 
 // Using this url as we know the root cert won't change for a long time
 #define TLS_CLIENT_SERVER "fw-download-alias1.raspberrypi.com"
@@ -77,7 +76,7 @@ int main() {
         goto done;
     }
     // Request DMA channels from secure
-    int num_dma_channels = dma_request_unused_channels_from_secure(8);
+    int num_dma_channels = dma_request_unused_channels_from_secure(4);
     printf("Got %d DMA channels\n", num_dma_channels);
 
     // Check no user IRQs are available
@@ -88,7 +87,7 @@ int main() {
         goto done;
     }
     // Request user IRQs from secure
-    int num_user_irqs = user_irq_request_unused_from_secure(2);
+    int num_user_irqs = user_irq_request_unused_from_secure(1);
     printf("Got %d user IRQs\n", num_user_irqs);
 
     // Check no PIOs are available
@@ -100,12 +99,9 @@ int main() {
         printf("ERROR: PIOs are already available\n");
         goto done;
     }
-    // Request PIOs from secure
+    // Request PIO from secure
     int got_pio = pio_request_unused_pio_from_secure();
     printf("Got PIO: %d\n", got_pio);
-
-    // Initialise stdio_usb
-    stdio_usb_init();
 
     // Repeating timer
     struct repeating_timer timer;
@@ -151,14 +147,12 @@ int main() {
         printf("Test failed\n");
     }
 
-done:
-    printf("Triggering secure fault\n");
-
-    volatile uint32_t thing = *(uint32_t*)SRAM4_BASE;
-
-    printf("SRAM4 is %08x\n", thing);
-
-    rom_reset_usb_boot(0, 0);
+    done:
+    printf("Triggering secure fault by reading secure memory\n");
+    // Secure memory is the rest of SRAM after the heap limit
+    extern uint32_t __HeapLimit;
+    volatile uint32_t thing = *(uint32_t*)__HeapLimit;
+    printf("Some secure memory is %08x\n", thing);
 
     return 0;
 }

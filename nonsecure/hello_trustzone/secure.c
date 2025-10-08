@@ -7,6 +7,7 @@
 
 bool repeating_timer_callback(__unused struct repeating_timer *t) {
     watchdog_update();
+    printf("Secure repeat at %lld\n", time_us_64());
     return true;
 }
 
@@ -32,10 +33,10 @@ int main()
         rom_reset_usb_boot(0, 0);
     }
 
-    // Create a repeating timer to update the watchdog every 100ms
+    // Create a repeating timer to update the watchdog every 1000ms
     struct repeating_timer timer;
-    watchdog_enable(110, true);
-    add_repeating_timer_ms(-100, repeating_timer_callback, NULL, &timer);
+    watchdog_enable(1100, true);
+    add_repeating_timer_ms(-1000, repeating_timer_callback, NULL, &timer);
 
     // Get boot partition
     boot_info_t info;
@@ -47,14 +48,6 @@ int main()
     printf("Matching Non-Secure partition: %d\n", ns_partition);
     int rc = rom_roll_qmi_to_partition(ns_partition);
     printf("Rolled QMI to Non-Secure partition, rc=%d\n", rc);
-
-    // Enable NS GPIO access to CYW43 GPIOs
-    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_REG_ON, true);
-    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_DATA_OUT, true);
-    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_DATA_IN, true);
-    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_HOST_WAKE, true);
-    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_CLOCK, true);
-    gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_CS, true);
 
     // Vectors are at the start of the binary, so treat that as end of NS code
     extern uint32_t __vectors;
