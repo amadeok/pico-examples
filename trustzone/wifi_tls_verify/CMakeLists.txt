@@ -43,4 +43,4 @@ pico_set_security_options(tls_verify_secure tls_verify_nonsecure
 )
 
 # Create combined UF2
-pico_concatenate_uf2_outputs(tls_verify_combined tls_verify_nonsecure tls_verify_secure)
+pico_concatenate_uf2_outputs(tls_verify_trustzone tls_verify_nonsecure tls_verify_secure)

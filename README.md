@@ -396,6 +396,15 @@ App|Description
 [periodic_sampler](timer/periodic_sampler) | Sample GPIOs in a timer callback, and push the samples into a concurrency-safe queue. Pop data from the queue in code running in the foreground.
 [timer_lowlevel](timer/timer_lowlevel) | Example of direct access to the timer hardware. Not generally recommended, as the SDK may use the timer for IO timeouts.
 
+### TrustZone (RP235x only)
+
+These examples all demonstrate using Arm TrustZone features, where separate code runs on the Secure and NonSecure sides of the chip. They require the partition table [trustzone_pt.json](trustzone/trustzone_pt.json) to be loaded, which provides separate partitions for Secure and NonSecure code. You can create a UF2 to load this partition table using `picotool partition create trustzone_pt.json trustzone_pt.uf2`.
+
+App|Description
+---|---
+[hello_trustzone](trustzone/hello_trustzone) | Demonstrate launching a non-secure binary, with the NonSecure binary using stdio_usb.
+[wifi_tls_verify](trustzone/wifi_tls_verify) | Similar to picow_tls_verify, but running all the networking code on the NonSecure side, using Secure stdio.
+
 ### UART
 
 App|Description
