@@ -1,5 +1,5 @@
 {
-    "$schema": "https://raw.githubusercontent.com/raspberrypi/picotool/develop/json/schemas/partition-table-schema.json",
+    "$schema": "https://raw.githubusercontent.com/raspberrypi/picotool/master/json/schemas/partition-table-schema.json",
     "version": [1, 0],
     "unpartitioned": {
         "families": ["absolute"],
@@ -12,8 +12,7 @@
     "partitions": [
         {
             "name": "Secure A",
-            "size": "320K",
-            "id": "0x41",
+            "size": "64K",
             "families": ["rp2350-arm-s"],
             "permissions": {
                 "secure": "rw",
@@ -22,8 +21,7 @@
         },
         {
             "name": "Secure B",
-            "size": "320K",
-            "id": "0x42",
+            "size": "64K",
             "families": ["rp2350-arm-s"],
             "permissions": {
                 "secure": "rw",
@@ -34,7 +32,6 @@
         {
             "name": "NonSecure A",
             "size": "700K",
-            "id": "0x41",
             "families": ["rp2350-arm-ns"],
             "permissions": {
                 "secure": "rw",
@@ -50,7 +47,6 @@
         {
             "name": "NonSecure B",
             "size": "700K",
-            "id": "0x42",
             "families": ["rp2350-arm-ns"],
             "permissions": {
                 "secure": "rw",
