@@ -5,10 +5,8 @@ target_link_libraries(hello_trustzone_s
         hardware_watchdog
         pico_secure
 )
-pico_set_modified_binary_type(hello_trustzone_s sram
-        RAM 0x20070000 60k
-        SCRATCH_X 0x2007f000 2k
-        SCRATCH_Y 0x2007f800 2k)
+
+pico_set_binary_type(hello_trustzone_s no_flash)
 pico_package_uf2_output(hello_trustzone_s 0x10000000)
 pico_add_extra_outputs(hello_trustzone_s)
 
@@ -20,8 +18,6 @@ target_link_libraries(hello_trustzone_ns
 )
 pico_enable_stdio_uart(hello_trustzone_ns 0)
 pico_enable_stdio_usb(hello_trustzone_ns 1)
-pico_set_modified_binary_type(hello_trustzone_ns flash
-        RAM 0x20000000 448k)
 pico_add_extra_outputs(hello_trustzone_ns)
 
 # Set security options
@@ -29,6 +25,9 @@ pico_set_security_options(hello_trustzone_s hello_trustzone_ns
     USER_IRQ USB
     NONSECURE_TIMER 1
 )
+
+# Set security ram split
+pico_set_security_ram_split(hello_trustzone_s hello_trustzone_ns SIMPLE 64k 2k)
 
 # Create combined UF2
 pico_concatenate_uf2_outputs(hello_trustzone hello_trustzone_ns hello_trustzone_s)

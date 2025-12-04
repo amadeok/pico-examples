@@ -5,10 +5,8 @@ target_link_libraries(tls_verify_secure
         hardware_watchdog
         pico_secure
 )
-pico_set_modified_binary_type(tls_verify_secure sram
-        RAM 0x20070000 60k
-        SCRATCH_X 0x2007f000 2k
-        SCRATCH_Y 0x2007f800 2k)
+
+pico_set_binary_type(tls_verify_secure no_flash)
 pico_package_uf2_output(tls_verify_secure 0x10000000)
 pico_add_extra_outputs(tls_verify_secure)
 
@@ -32,8 +30,7 @@ target_compile_definitions(tls_verify_nonsecure PRIVATE
     # Make it required for this test
     ALTCP_MBEDTLS_AUTHMODE=MBEDTLS_SSL_VERIFY_REQUIRED
 )
-pico_set_modified_binary_type(tls_verify_nonsecure flash
-        RAM 0x20000000 448k)
+
 pico_add_extra_outputs(tls_verify_nonsecure)
 
 # Set security options
@@ -41,6 +38,9 @@ pico_set_security_options(tls_verify_secure tls_verify_nonsecure
     STDIO RAND DMA USER_IRQ PIO GPIO USB
     NONSECURE_TIMER 1
 )
+
+# Set security ram split
+pico_set_security_ram_split(tls_verify_secure tls_verify_nonsecure SIMPLE 64k 2k)
 
 # Create combined UF2
 pico_concatenate_uf2_outputs(tls_verify_trustzone tls_verify_nonsecure tls_verify_secure)

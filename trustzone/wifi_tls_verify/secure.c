@@ -56,16 +56,8 @@ int main()
     gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_CLOCK, true);
     gpio_assign_to_ns(CYW43_DEFAULT_PIN_WL_CS, true);
 
-    // Vectors are at the start of the binary, so treat that as end of NS code
-    extern uint32_t __vectors;
-
     // Configure SAU regions
-    // XIP is NS Code
-    secure_sau_configure_region(0, XIP_BASE, XIP_END, true, false);
-    // SRAM0 up to start of secure code is NS data
-    secure_sau_configure_region(1, SRAM_BASE, (uint32_t)&__vectors, true, false);
-    // SRAM8-9 is NS scratch
-    secure_sau_configure_region(2, SRAM8_BASE, SRAM_END, true, false);
+    secure_sau_configure_split();
 
     // Enable SAU
     secure_sau_set_enabled(true);
