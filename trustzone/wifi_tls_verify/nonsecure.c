@@ -147,11 +147,10 @@ int main() {
         printf("Test failed\n");
     }
 
-    done:
+done:
     printf("Triggering secure fault by reading secure memory\n");
-    // Secure memory is the rest of SRAM after the heap limit
-    extern uint32_t __HeapLimit;
-    volatile uint32_t thing = *(uint32_t*)__HeapLimit;
+    // Secure memory is the start of SRAM
+    volatile uint32_t thing = *(uint32_t*)SRAM_BASE;
     printf("Some secure memory is %08x\n", thing);
 
     return 0;
