@@ -60,7 +60,7 @@ int main()
     rom_get_boot_info(&info);
     printf("Boot partition: %d\n", info.partition);
 
-    // Roll QMI to matching Non-Secure partition
+    // Roll QMI to matching Non-Secure partition, as Non-Secure runs from XIP
     int ns_partition = rom_get_owned_partition(info.partition);
     printf("Matching Non-Secure partition: %d\n", ns_partition);
     int rc = rom_roll_qmi_to_partition(ns_partition);

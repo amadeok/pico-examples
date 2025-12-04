@@ -14,6 +14,7 @@ int main() {
     // Request user IRQ from secure, which stdio_usb will use
     user_irq_request_unused_from_secure(1);
 
+    // Start stdio_usb
     stdio_usb_init();
 
     // Repeating timer
