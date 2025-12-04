@@ -1,0 +1,5 @@
+#pragma once
+
+#define SECURE_CALL_CALLBACKS_MASK 0xfedc
+
+#define SECURE_CALL_PRINT_VALUES ((SECURE_CALL_CALLBACKS_MASK << 16) | 0x1)

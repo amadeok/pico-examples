@@ -3,6 +3,8 @@
 #include "hardware/clocks.h"
 #include "pico/stdlib.h"
 
+#include "secure_call_user_callbacks.h"
+
 bool repeating_timer_callback(__unused struct repeating_timer *t) {
     printf("NS Repeat at %lld\n", time_us_64());
     return true;
@@ -27,6 +29,7 @@ int main() {
 
     for (int i=0; i < 10; i++) {
         printf("Hello, world, from non-secure!\n");
+        rom_secure_call(1, 2, 3, i, SECURE_CALL_PRINT_VALUES);
         sleep_ms(1000);
     }
 

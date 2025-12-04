@@ -4,6 +4,8 @@
 #include "hardware/watchdog.h"
 #include "pico/secure.h"
 
+#include "secure_call_user_callbacks.h"
+
 
 bool repeating_timer_callback(__unused struct repeating_timer *t) {
     watchdog_update();
@@ -23,6 +25,17 @@ void hardfault_callback(void) {
 }
 
 
+int secure_call_user_callback(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t fn) {
+    switch (fn) {
+        case SECURE_CALL_PRINT_VALUES:
+            printf("NS called secure_call with %d %d %d %d\n", a, b, c, d);
+            return BOOTROM_OK;
+        default:
+            return BOOTROM_ERROR_INVALID_ARG;
+    }
+}
+
+
 int main()
 {
     stdio_init_all();
@@ -37,6 +50,9 @@ int main()
     struct repeating_timer timer;
     watchdog_enable(1100, true);
     add_repeating_timer_ms(-1000, repeating_timer_callback, NULL, &timer);
+
+    // Create user callback
+    rom_secure_call_add_user_callback(secure_call_user_callback, SECURE_CALL_CALLBACKS_MASK);
 
     // Get boot partition
     boot_info_t info;
