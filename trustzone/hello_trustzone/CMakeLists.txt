@@ -29,5 +29,5 @@ pico_set_security_options(hello_trustzone_s hello_trustzone_ns
 # Set security ram split
 pico_set_security_ram_split(hello_trustzone_s hello_trustzone_ns SIMPLE 64k 2k)
 
-# Create combined UF2
+# Create combined UF2 (ns first)
 pico_concatenate_uf2_outputs(hello_trustzone hello_trustzone_ns hello_trustzone_s)

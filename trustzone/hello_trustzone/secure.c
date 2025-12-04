@@ -76,7 +76,7 @@ int main()
     secure_install_default_hardfault_handler(hardfault_callback);
 
     // Launch Non-Secure binary
-    secure_launch_nonsecure_binary(XIP_BASE, SRAM8_BASE);
+    secure_launch_nonsecure_binary_default();
 
     // Should never return from non-secure code
     printf("Shouldn't return from non-secure code\n");
