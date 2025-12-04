@@ -54,6 +54,7 @@ int main()
     // Create user callback
     rom_secure_call_add_user_callback(secure_call_user_callback, SECURE_CALL_CALLBACKS_MASK);
 
+#if !PICO_SECURITY_SPLIT_NO_FLASH
     // Get boot partition
     boot_info_t info;
     rom_get_boot_info(&info);
@@ -64,6 +65,7 @@ int main()
     printf("Matching Non-Secure partition: %d\n", ns_partition);
     int rc = rom_roll_qmi_to_partition(ns_partition);
     printf("Rolled QMI to Non-Secure partition, rc=%d\n", rc);
+#endif
 
     // Configure SAU regions
     secure_sau_configure_split();
