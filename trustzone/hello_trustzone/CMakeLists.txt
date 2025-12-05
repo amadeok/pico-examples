@@ -61,7 +61,7 @@ target_link_libraries(hello_trustzone_no_flash_ns
 )
 
 # Set UF2 family manually
-pico_set_uf2_family(hello_trustzone_ns "rp2350-arm-ns")
+pico_set_uf2_family(hello_trustzone_no_flash_ns "rp2350-arm-ns")
 
 # Use stdio_usb
 pico_enable_stdio_uart(hello_trustzone_no_flash_ns 0)
